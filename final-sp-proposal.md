@@ -1,3 +1,4 @@
+TODO: shorten snippets
 # Streaming Producer: Proposal
 Publishing events using the producer client is optimized for high and consistent throughput scenarios, allowing applications to collect a set of events as a batch and publish in a single operation.  In order to maximize flexibility, developers are expected to build and manage batches according to the needs of their application, allowing them to prioritize trade-offs between ensuring batch density, enforcing strict ordering of events, and publishing on a consistent and predictable schedule.
 
@@ -12,6 +13,8 @@ The primary goal of the streaming producer is to provide developers the ability 
 - Fake methods are used to illustrate "something needs to happen, but the details are unimportant."  As a general rule, if an operation is not directly related to one of the Event Hubs types, it can likely be assumed that it is for illustration only.  These methods will most often use ellipses for the parameter list, in order to help differentiate them.
 
 ## Why this is needed
+TODO: every other cloud messaging has implicit batching, event hubs is the only one that doesn't
+
 When applications need to process low frequency or sparse event streams, the current approach for publishing a single event can introduce inefficiencies that could negatively impact throughput. In order to avoid this, developers need to include non-trivial overhead to their code to manage decisions around caching batches-in-progress, routing events to the correct batch, and publishing partial batches when events aren't being published frequently . With the streaming producer, applications can queue events into the producer as they are needed and the producer will take care of efficiently managing batches and publishing. 
 
 A method to publish a single event was available in legacy versions of the Event Hubs client library. However, this method used a naïve approach of  simply publishing a batch containing one event, rendering it highly inefficient.  Developers often assumed that there was an intelligence behind the method, expecting it to leverage efficient batching, leading to overuse and poor application performance. The streaming producer returns the ability to publish a single event, but with a more efficient implementation that helps to ensure throughput and reduce resource use.
@@ -112,6 +115,9 @@ var producer = new StreamingProducer(connectionString, eventHubName, new Streami
     MaximumConcurrentSendsPerPartition = 4; 
 });    
 ```
+
+### Defining custom retry policy
+TODO: document that creating a retry policy is highly recommended
 
 ### Publish events using the Streaming Producer
 
@@ -272,7 +278,17 @@ finally
 }
 ```
 
+### Creating a timeout for enqueuing events
+TODO: cancellation token snippet
+
+### Failure recovery: When ordering matters
+TODO: deadlettering when failure occurs
+
+### Failure recovery: When ordering doesn't matter
+TODO: re-add to the queue when failure occurs
+
 ### Failure recovery: poison messages
+TODO: Remove this scenario and adapt it into the above
 When publishing to the Event Hub occasionally an error that is not resolved through retires may occur.  While some may be recovered if allowed to continue retrying, others may be terminal.  For example, a poison message that will never succeed. For Event Hubs, this could be the result of an event exceeding the maximum message size allowed by the Event Hubs service. Another could be if the application requires that an event be processed within a specific timeframe, so messages that are too old are meaningless. Since both of these failure indicate that the message can never be published/processed, the application will need to deal with the failure elsewhere in order to make forward progress.
 ```csharp
 // Accessing the Event Hub
@@ -654,6 +670,7 @@ All of Kafka's messages are sent in key, value pairs. It is possible to send a b
 However, the recommended approach with the streaming producer is to send it without a key or partition id unless events need to be sent to the same partition. This allows the application to take advantage of all the available partitions.
 
 ### Core Failures
+TODO: reformat the following to mirror ordering mattering and not mattering
 #### Kafka: Dealing with non-retriable errors
 ```java
 private Properties kafkaProps = new Properties();
